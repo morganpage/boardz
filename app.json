@@ -1,0 +1,4 @@
+{
+  "name":"Boardz",
+  "addons":["heroku-postgresql:hobby-dev"]
+}
