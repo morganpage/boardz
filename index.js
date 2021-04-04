@@ -19,6 +19,30 @@ app.get("/boardz", async (req, res) => {
   }
 })
 
+app.get("/boardz/:game", async (req, res) => {
+  try {
+    const { game } = req.params;
+    const boardGame = await pool.query("SELECT * FROM board WHERE game = $1", [game]);
+    res.json(boardGame.rows);
+  } catch (error) {
+    console.log(error.message);
+  }
+})
+
+app.post("/boardz/:game", async (req, res) => {
+  try {
+    const { game } = req.params;
+    const { player,score} = req.body;
+    const boardGame = await pool.query(
+      "INSERT INTO board (game,player,score) VALUES ($1,$2,$3) RETURNING *"
+      , [game,player,score]);
+    res.json(boardGame.rows[0]);
+  } catch (error) {
+    console.log(error.message);
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`server has started on port:${PORT}`);
 })
