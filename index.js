@@ -12,7 +12,7 @@ app.use(json());
 
 app.get("/boardz", async (req, res) => {
   try {
-    const allBoardz = await pool.query("SELECT * FROM board");
+    const allBoardz = await pool.query("SELECT * FROM board ORDER BY score DESC");
     res.json(allBoardz.rows);
   } catch (error) {
     console.log(error.message);
@@ -22,7 +22,7 @@ app.get("/boardz", async (req, res) => {
 app.get("/boardz/:game", async (req, res) => {
   try {
     const { game } = req.params;
-    const boardGame = await pool.query("SELECT * FROM board WHERE game = $1", [game]);
+    const boardGame = await pool.query("SELECT * FROM board WHERE game = $1 ORDER BY score DESC", [game]);
     res.json(boardGame.rows);
   } catch (error) {
     console.log(error.message);
@@ -36,7 +36,12 @@ app.post("/boardz/:game", async (req, res) => {
     const boardGame = await pool.query(
       "INSERT INTO board (game,player,score) VALUES ($1,$2,$3) RETURNING *"
       , [game,player,score]);
-    res.json(boardGame.rows[0]);
+    //Now delete everything except the top n scores for this game
+    const del = await pool.query(
+      'DELETE FROM board WHERE game = $1 AND board_id NOT IN (SELECT board_id FROM board WHERE game = $1 ORDER BY score DESC limit $2);',
+      [game,3]
+    );
+    return res.json(boardGame.rows[0]);
   } catch (error) {
     console.log(error.message);
   }
